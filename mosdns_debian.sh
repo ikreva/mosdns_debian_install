@@ -11,8 +11,8 @@ MOSDNS_URL="https://gh.cooluc.com/https://github.com/IrineSistiana/mosdns/releas
 V2DAT_URL="https://gh.cooluc.com/https://github.com/ikreva/v2dat/releases/download/0.1/v2dat-linux-amd64.zip"
 
 # 定义数据库下载链接
-GEOSITE_URL="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
-GEOIP_URL="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+GEOSITE_URL="https://gh.cooluc.com/https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geosite.dat"
+GEOIP_URL="https://gh.cooluc.com/https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geoip.dat"
 ANTI_AD_URL="https://anti-ad.net/domains.txt"
 MOSDNS_ADRULES_URL="https://adrules.top/mosdns_adrules.txt"
 CLOUDFLARE_CIDR_URL="https://gh.cooluc.com/https://raw.githubusercontent.com/sbwml/luci-app-mosdns/v5/luci-app-mosdns/root/etc/mosdns/rule/cloudflare-cidr.txt"
@@ -41,6 +41,9 @@ unpack_data() {
     fi
     echo "geo数据解包完成."
 }
+
+case $1 in
+-i|install)
 
 # 检查是否已经安装了 wget 和 unzip
 for cmd in wget unzip; do
@@ -660,3 +663,43 @@ else
     (crontab -l 2>/dev/null; echo "0 5 * * * $MOSDNS_BIN/update_geodata.sh") | crontab -
     echo "计划任务已经添加。"
 fi
+
+;;
+
+-u|uninstall|remove)
+
+echo "删除 mosdns 服务..."
+systemctl stop mosdns
+systemctl disable mosdns
+rm -f /etc/systemd/system/mosdns.service
+systemctl daemon-reload
+
+echo "删除 mosdns 配置文件及数据文件..."
+rm -rf $MOSDNS_CONFIG
+rm -rf /var/mosdns
+rm -f $MOSDNS_BIN/{v2dat,mosdns,update_geodata.sh}
+
+echo "删除自动更新数据库的计划任务"
+# 检查是否已经存在相同的计划任务
+if crontab -l | grep -q "$MOSDNS_BIN/update_geodata.sh"; then
+    # 删除计划任务
+    crontab -l | grep -v "$MOSDNS_BIN/update_geodata.sh" | crontab -
+    echo "计划任务已经删除。"
+else
+    echo "没有找到计划任务。"
+fi
+
+;;
+
+-up|update)
+
+$MOSDNS_BIN/update_geodata.sh
+
+;;
+
+*)
+echo "安装参数 -i | install"
+echo "更新数据库参数 -up | update"
+echo "卸载参数 -u | uninstall | remove"
+;;
+esac

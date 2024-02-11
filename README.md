@@ -1,6 +1,6 @@
 # mosdns_debian_install
  install mosdns in debian amd64 system
  
- install_mosdns.sh   for install
+ mosdns_debian.sh -i or instatll for install
  
- uninstall_mosdns.sh  for uninstall
+ mosdns_debian.sh -u or uninstall for uninstall
